@@ -1,0 +1,241 @@
+#addPage{
+    margin:0px 8px;
+    cursor: pointer;
+    height: 25px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-column-gap: 10px;
+    align-items: center;
+    justify-content: center;
+
+}
+
+#addPageIcon{
+    height: 25px;
+    width:25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#addPageIcon:hover{
+    border-radius: 50%;
+    box-shadow:0px 2px 2px 0px rgba(0,0,0,0.3);
+    cursor: pointer;
+}
+
+.pageButton{
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    cursor:pointer;
+}
+
+.EditDropdown{
+    position: absolute;
+    background-color: black;
+    color: white;
+    border-radius: 7px;
+    font-size: 12px;
+    top:45px;
+    right:5px;
+    overflow: hidden;
+    opacity: 0.92;
+}
+
+.EditDropdown.formDropdown{
+    position: absolute;
+    background-color: rgb(78, 73, 73);
+    top:34px;
+    font-size: 10px;
+}
+
+.EditDropdown .items{
+    display: grid;
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: start;
+    grid-column-gap: 5px;
+    padding:10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.EditDropdown.formDropdown .items{
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+
+.EditDropdown .items:hover{
+    background-color: rgb(49, 47, 47);
+}
+
+.EditDropdown.formDropdown .items:hover{
+    opacity: 0.5;
+}
+
+.page-name-input{
+    border:1px solid gray;
+    border-radius: 3px;
+    height:28px;
+    padding: 0px 10px;
+    margin:0px 5px;
+}
+
+.card-dialog-box{
+    z-index:200;
+    min-width:280px;
+    position:absolute;
+    top:45px;
+    left:8px;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    padding: 15px;
+    background-color: white;
+    cursor:default;
+}
+
+.card-dialog-box .header{
+    font-size: 17px;
+    font-weight: bold;
+    color: black;
+}
+
+.card-dialog-box .description{
+    font-size: 15px;
+    font-weight: 200;
+    color:gray;
+    margin-top:10px
+}
+
+.card-dialog-box .button-section{
+    display: flex;
+    justify-content: flex-end;
+    align-items:center;
+    margin-top:10px;
+}
+
+.card-dialog-box .button-section .cancel{
+    font-size: 15px;
+    font-weight: 200;
+    color:gray;
+    margin-right:12px;
+    cursor:pointer;
+}
+
+.card-dialog-box .button-section .cancel:hover{
+    color:black;
+}
+
+.card-dialog-box .button-section .confirm{
+    border: 1px solid #F94B78;
+    background-color: rgb(223, 55, 99);
+    color: white;
+    padding:3px 14px;
+    cursor:pointer;
+    border-radius:3px;
+}
+
+.card-dialog-box .button-section .confirm:hover{
+    opacity:0.7;
+}
+
+.field-body{
+    box-shadow:  0 0 2px rgba(0,0,0,0.3);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 120ms ease;
+}
+
+.field-body.isDragging{
+    background-color: rgb(229, 243, 221);
+    box-shadow: none;
+    border: 1px solid rgb(241, 158, 180);
+    margin-bottom: 0;
+}
+
+.field-body:hover{
+    box-shadow:  0 0 4px rgba(0,0,0,0.5);
+}
+
+
+.field-body .header{
+    color: gray;
+    text-align: start;
+    font-weight: bold;
+}
+
+.field-body.isDragging .header{
+    color:black;
+    font-weight: 300;
+}
+
+.field-body .description{
+    color: gray;
+    font-weight: 200;
+}
+
+.form-input-button{
+    color:rgb(14, 119, 105)
+}
+
+.form-input-button:hover{
+    opacity: 0.6
+}
+
+.form-section.isDraggingOver{
+    background-color: rgb(199, 235, 228);
+}
+
+.form-section{
+    transition: all 120ms ease-out;
+}
+
+.form-input-wrapper{
+    padding: 0px 6px;
+}
+
+.form-input-wrapper:hover{
+    box-shadow:  0 0 4px rgba(0,0,0,0.4);
+    border-radius: 4px;
+}
+
+.form-input-wrapper.isDragging{
+    box-shadow:  0 0 4px rgba(0,0,0,0.5);
+    background-color: rgb(200, 245, 230);
+    border-radius: 4px;
+    height: 20px
+}
+
+.form-input-ui{
+    position: relative;
+}
+
+.formEditDropdown{
+    position: absolute
+}
+
+.form-label-tag{
+    border-radius: 3px;
+    color: white;
+    font-size:11px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    margin:0px 6px
+}
+
+.form-label-tag.mandatory{
+    background-color: rgb(58, 153, 156);
+}
+
+.form-label-tag.readonly{
+    background-color: rgb(197, 88, 115);
+}

@@ -8,9 +8,56 @@ import {
   weekRange,
   findFirstSunday
 } from './date';
-import './calendar.css';
+
+import OutsideClick from './OutsideClick';
+import DateMonthPicker from './yearmonthpicker';
+import './appointmentCalendar.css';
 
 let moment = extendMoment(Moment);
+
+class DateDropDown extends Component {
+  state = {
+    showdropdown: false
+  };
+
+  toggleDropdownOn = () => {
+    this.setState({ showdropdown: true });
+  };
+
+  toggleDropdownOff = () => {
+    this.setState({ showdropdown: false });
+  };
+
+  onSelect = data => {
+    this.toggleDropdownOff();
+    this.props.onSelect(data);
+  };
+
+  render() {
+    return (
+      <div className="datedropdown">
+        <OutsideClick onOutsideClick={this.toggleDropdownOff}>
+          <div className="button" onClick={this.toggleDropdownOn}>
+            <i className="fas fa-calendar-day" />
+          </div>
+          {this.state.showdropdown && (
+            <div
+              style={{
+                position: 'absolute',
+                background: 'white',
+                borderRadius: '5px'
+              }}
+            >
+              <div>
+                <DateMonthPicker onSelect={this.onSelect} />
+              </div>
+            </div>
+          )}
+        </OutsideClick>
+      </div>
+    );
+  }
+}
 
 class DayCard extends Component {
   constructor(props) {
@@ -29,28 +76,81 @@ class DayCard extends Component {
     this.setState({ showAddEvent: false });
   };
 
+  onDayClick = () => {
+    if (this.props.disabled) {
+      return;
+    }
+
+    this.props.onDayClick(this.props.date);
+  };
+
   render() {
+    let date = moment();
+    let timeSlots = [];
+    let timeSlotCards = [];
+    let i = 0;
+    if (this.props.isDayView) {
+      this.props.appointmentData.forEach(data => {
+        let startTime = data.start.split(':').map(data => {
+          return parseInt(data);
+        });
+
+        let endTime = data.end.split(':').map(data => {
+          return parseInt(data);
+        });
+
+        let date1 = moment(data.start, 'HH:mm');
+        let date2 = moment(data.end, 'HH:mm');
+
+        if (date1.minute() !== 0 || date1.minute() % 15 !== 0) {
+          let adjustedTime = date1.minute() - (date1.minute() % 15) + 15;
+          date1.set({ minute: adjustedTime });
+        }
+        let timeArr = Array.from(
+          moment.range(date1, date2).by('minutes', { step: 15 })
+        );
+
+        timeArr.pop();
+
+        if (timeSlots.length > 0) {
+          timeSlots = [...timeSlots, { type: 'break' }, ...timeArr];
+        } else {
+          timeSlots = [...timeSlots, ...timeArr];
+        }
+      });
+
+      timeSlots.forEach(data => {
+        if (data.type === 'break') {
+          timeSlotCards.push(<div className="timeslot  not-available-card" />);
+        } else {
+          timeSlotCards.push(
+            <div className="timeslot">{data.format('HH:mm').toString()}</div>
+          );
+        }
+      });
+    }
+
     return (
       <div
-        className={`day ${this.props.disabled && 'disabled'} ${this.props
-          .className && this.props.className}`}
-        onMouseLeave={this.onMouseLeave}
-        onMouseEnter={this.onMouseEnter}
+        className={`day ${this.props.disabled ? 'disabled' : ''} ${this.props
+          .isDayView && 'day-view'}`}
+        onClick={this.onDayClick}
       >
         <div className="day-top">
           <span
             className={`date ${this.props.isCurrent &&
               'current'} round-border6`}
           >
-            {this.props.date}
+            {this.props.date.date()}
           </span>
-          {this.state.showAddEvent && (
-            <div className="add-logo">
-              <i class="fas fa-plus" />
-            </div>
-          )}
         </div>
-        <div className="day-bottom" />
+        {!this.props.isDayView && <div className="day-bottom" />}
+        {this.props.isDayView && (
+          <div className="day-bottom ">
+            <div className="wrapper custom-scrollbar">{timeSlotCards}</div>
+            <div style={{ height: '20px', zIndex: '1' }} />
+          </div>
+        )}
       </div>
     );
   }
@@ -61,8 +161,11 @@ export default class EventCalendar extends Component {
     super(props);
 
     this.state = {
+      dateDropdown: false,
       date: moment(),
-      view: { type: 'month' }
+      view: { type: 'month' },
+      availability_field: this.props.availability_field_data,
+      location: this.props.selected_location
     };
   }
 
@@ -133,7 +236,56 @@ export default class EventCalendar extends Component {
     }
   };
 
+  toggleDateDropdown = () => {
+    this.setState({ dateDropdown: !this.state.dateDropdown });
+  };
+
+  onSelect = data => {
+    this.setState({
+      date: moment({ year: data.year, month: data.month, day: 1 })
+    });
+  };
+
+  onDayClick = date => {
+    this.setState({
+      view: {
+        type: 'day',
+        number: 1
+      },
+      date: date
+    });
+  };
+
+  filterDays = date => {
+    let data = this.state.availability_field[
+      dayNames[date.day()].toLowerCase()
+    ];
+    if (data.length === 0) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
+  filterFieldsWithLocation = location => {
+    let availability_field_copy = JSON.parse(
+      JSON.stringify(this.state.availability_field)
+    );
+
+    for (let [key, value] of Object.entries(availability_field_copy)) {
+      let new_arr = value.filter(data => {
+        return data.location.includes(location);
+      });
+      availability_field_copy[key] = new_arr;
+    }
+
+    return availability_field_copy;
+  };
+
   render() {
+    let filtered_availability_field = this.filterFieldsWithLocation(
+      this.state.location
+    );
     let viewbardata = null;
     let dates = null;
     let calendarStyle = null;
@@ -150,35 +302,14 @@ export default class EventCalendar extends Component {
         let isDisabled =
           date.clone().month() !== this.state.date.clone().month();
         let isCurrent = date.isSame(moment(), 'date');
+        let isDayAvailable = this.filterDays(date);
         return (
           <DayCard
             key={date.toString()}
-            disabled={isDisabled}
+            disabled={isDisabled || !isDayAvailable}
             isCurrent={isCurrent}
-            date={date.date()}
-          />
-        );
-      });
-    }
-
-    if (this.state.view.type === 'week') {
-      dates = weekRange(this.state.date.clone().day(0), this.state.view.number);
-      let startingDate = dates[0];
-      let endDate = dates[dates.length - 1];
-      let startingMonth = monthNames[parseInt(startingDate.month())].substring(
-        0,
-        3
-      );
-      let endMonth = monthNames[parseInt(endDate.month())].substring(0, 3);
-      calendarStyle = { gridTemplateColumns: 'repeat(7,1fr)' };
-      viewbardata = `${startingMonth} ${startingDate.date()} - ${endMonth} ${endDate.date()}, ${endDate.year()}`;
-      dayCards = dayCards = dates.map(date => {
-        let isCurrent = date.isSame(moment(), 'date');
-        return (
-          <DayCard
-            key={date.toString()}
-            isCurrent={isCurrent}
-            date={date.date()}
+            onDayClick={this.onDayClick}
+            date={date}
           />
         );
       });
@@ -218,11 +349,16 @@ export default class EventCalendar extends Component {
 
       dayCards = dayCards = dates.map(date => {
         let isCurrent = date.isSame(moment(), 'date');
+        let appointmentData =
+          filtered_availability_field[dayNames[date.day()].toLowerCase()];
         return (
           <DayCard
             key={date.toString()}
             isCurrent={isCurrent}
-            date={date.date()}
+            appointmentData={appointmentData}
+            isDayView={true}
+            date={date}
+            onDayClick={this.onDayClick}
           />
         );
       });
@@ -242,6 +378,9 @@ export default class EventCalendar extends Component {
               <i className="fas fa-angle-left" onClick={this.onBack} />
               <i className="fas fa-angle-right" onClick={this.onNext} />
               <span className="unselectable">{viewbardata}</span>
+              <span>
+                <DateDropDown onSelect={this.onSelect} />
+              </span>
             </div>
             <div className="view-selection">
               <div
@@ -251,36 +390,6 @@ export default class EventCalendar extends Component {
                 onClick={this.onViewSelection}
               >
                 Month
-              </div>
-              <div
-                className={`view-button ${this.state.view.type === 'week' &&
-                  this.state.view.number === 2 &&
-                  'active'}`}
-                id="week"
-                data="2"
-                onClick={this.onViewSelection}
-              >
-                2 Week
-              </div>
-              <div
-                className={`view-button ${this.state.view.type === 'week' &&
-                  this.state.view.number === 1 &&
-                  'active'}`}
-                id="week"
-                data="1"
-                onClick={this.onViewSelection}
-              >
-                Week
-              </div>
-              <div
-                className={`view-button ${this.state.view.type === 'day' &&
-                  this.state.view.number === 3 &&
-                  'active'}`}
-                id="day"
-                data="3"
-                onClick={this.onViewSelection}
-              >
-                3 Day
               </div>
               <div
                 className={`view-button ${this.state.view.type === 'day' &&
@@ -296,7 +405,11 @@ export default class EventCalendar extends Component {
           </div>
           <div className="top" style={calendarStyle}>
             {dayNamesArr.map(name => {
-              return <div className="day-names">{name.substring(0, 3)}</div>;
+              return (
+                <div key={name} className="day-names">
+                  {name.substring(0, 3)}
+                </div>
+              );
             })}
           </div>
           <div className="bottom" style={calendarStyle}>
